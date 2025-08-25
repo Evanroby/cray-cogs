@@ -8,8 +8,7 @@ from typing import Dict, List, Optional, TypeVar, Union, overload
 import discord
 from redbot.core import Config, commands
 from redbot.core.bot import Red
-from redbot.core.utils.chat_formatting import humanize_list, pagify
-from redbot.core.utils.menus import DEFAULT_CONTROLS, menu
+from redbot.core.utils.chat_formatting import humanize_list
 
 from .models import NoteType, UserNote
 from .views import PaginationView
@@ -70,7 +69,7 @@ class Notes(commands.Cog):
                     }
                 )
 
-        log.debug(f"Cached all user notes.")
+        log.debug("Cached all user notes.")
 
         self.cache = final
 
@@ -82,7 +81,7 @@ class Notes(commands.Cog):
                 notes = [note.to_dict() for note in notes]
                 await self.config.member_from_ids(key, member).notes.set(notes)
 
-        log.debug(f"Saved all user notes")
+        log.debug("Saved all user notes")
 
     @classmethod
     async def initialize(cls, bot):
@@ -133,11 +132,12 @@ class Notes(commands.Cog):
         Extra kwargs can be passed to create embeds off of.
         """
 
-        fix_kwargs = lambda kwargs: {
-            next(x): (fix_kwargs({next(x): v}) if "__" in k else v)
-            for k, v in kwargs.copy().items()
-            if (x := iter(k.split("__", 1)))
-        }
+        def fix_kwargs(kwargs):
+            return {
+                next(x): (fix_kwargs({next(x): v}) if "__" in k else v)
+                for k, v in kwargs.copy().items()
+                if (x := iter(k.split("__", 1)))
+            }
 
         kwargs = fix_kwargs(kwargs)
         # yea idk man.
@@ -238,7 +238,7 @@ class Notes(commands.Cog):
             return await ctx.send("No notes found for this server.")
 
         embeds = []
-        total_pages = math.ceil(sum(1 for l in notes.values() for i in l) / 5)
+        total_pages = math.ceil(sum(1 for note_list in notes.values() for i in note_list) / 5)
         for user, n in notes.items():
             if not n:
                 continue
@@ -247,13 +247,13 @@ class Notes(commands.Cog):
             for page, chunk in enumerate(chunkify(n, 5)):
                 final = f"**{user}**\n\n"
                 for j, note in enumerate(chunk, 1):
-                    final += f"""**{page*5+j}**. {"(Donation note)" if note.type is NoteType.DonationNote else ""} \n{note}\n\n"""
+                    final += f"""**{page * 5 + j}**. {"(Donation note)" if note.type is NoteType.DonationNote else ""} \n{note}\n\n"""
                 embeds.append(
                     discord.Embed(
                         title=f"Notes for {ctx.guild}",
                         description=final,
                         color=discord.Color.green(),
-                    ).set_footer(text=f"Page {page+1}/{total_pages}")
+                    ).set_footer(text=f"Page {page + 1}/{total_pages}")
                 )
 
         if not embeds:
@@ -316,7 +316,7 @@ class Notes(commands.Cog):
             )
 
         if not removed:
-            return await ctx.send(f"There are no notes for that user.")
+            return await ctx.send("There are no notes for that user.")
         return await ctx.send(f"Removed note: {id}. {removed}")
 
     @commands.command()
