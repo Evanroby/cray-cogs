@@ -26,7 +26,8 @@ def chunkify(iterable: list[T], chunk_size: int):
 
 class Notes(commands.Cog):
     """
-    Store moderator notes on users"""
+    Store moderator notes on users
+    """
 
     __version__ = "1.2.0"
     __author__ = ["crayyy_zee"]
