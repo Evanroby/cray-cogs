@@ -240,10 +240,15 @@ class Notes(commands.Cog):
 
         embeds = []
         total_pages = math.ceil(sum(1 for note_list in notes.values() for i in note_list) / 5)
-        for user, n in notes.items():
+        for user_id, n in notes.items():
             if not n:
                 continue
-            user = ctx.guild.get_member(user)
+            user = ctx.guild.get_member(user_id) or self.bot.get_user(user_id)
+            if not user:
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                except discord.HTTPException:
+                    user = f"Unknown User ({user_id})"
 
             for page, chunk in enumerate(chunkify(n, 5)):
                 final = f"**{user}**\n\n"
